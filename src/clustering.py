@@ -17,17 +17,91 @@ from sklearn.preprocessing import StandardScaler
 
 class DataCleaner:
     def __init__(self, data_path):
+        # Initialize the DataCleaner with a data path
+        self.data_path = data_path
+        self.df = None
+        self.df_uk = None
+        self.rfm_data = None
 
     def load_data(self):
+        # Load and display basic information about the dataset
+        dtype = dict(
+            InvoiceNo=np.object_,
+            StockCode=np.object_,
+            Description=np.object_,
+            Quantity=np.int64,
+            UnitPrice=np.float64,
+            CustomerID=np.object_,
+            Country=np.object_,
+        )
+
+        self.df = pd.read_csv(
+            self.data_path,
+            encoding="ISO-8859-1",
+            parse_dates=["InvoiceDate"],
+            dtype=dtype,
+        )
+
+        # Transform the ID into 6 digit format
+        self.df["CustomerID"] = (
+            self.df["CustomerID"]
+            .astype(str)
+            .str.replace(".0", "", regex=False)
+            .str.zfill(6)
+        )
+
+        print(f"Data's size: {self.df.shape}")
+        print(f"Number of record: {len(self.df):,}")
+
+        return self.df
     
     def clean_data(self):
+        # Removing invalid records and focus on UK customers
+
+        # Add UnitPrice
+        self.df["TotalPrice"] = self.df["Quantity"] * self.df["UnitPrice"]
+
+        # Remove the cancelled invoice (starts with C)
+        self.df = self.df[~self.df["InvoiceNo"].astype(str).str.startswith("C")]
+
+        # UK customers only
+        self.df_uk = self.df[self.df["Country"] == "United Kingdom"].copy()
+
+        # Remove the record with no CustomerID
+        self.df_uk = self.df_uk.dropna(subset=["CustomerID"])
+
+        # Remove invalid records
+        self.df_uk = self.df_uk[
+            (self.df_uk["Quantity"] > 0) & (self.df_uk["UnitPrice"] > 0)
+        ]
+
+        return self.df_uk
 
     def create_time_features(self):
+        self.df_uk["DayOfWeek"] = self.df_uk["InvoiceDate"].dt.dayofweek
+        self.df_uk["HourOfDay"] = self.df_uk["InvoiceDate"].dt.hour
 
     def calculate_rfm(self):
+        # Calculate Recency, Frequency, Monetary metrics
+        snapshot_date = self.df_uk["InvoiceDate"].max() + pd.Timedelta(days=1)
+
+        self.rfm_data = self.df_uk.groupby("CustomerID").agg(
+            {
+                "InvoiceDate": lambda x: (snapshot_date - x.max()).days,  # Recency
+                "InvoiceNo": lambda x: len(x.unique()),  # Frequency
+                "TotalPrice": lambda x: x.sum(),  # Monetary
+            }
+        )
+
+        self.rfm_data.columns = ["Recency", "Frequency", "Monetary"]
+        return self.rfm_data
     
     def save_cleaned_data(self, output_dir="../data/processed"):
-
+        # Save data to a specific directory
+        os.makedirs(output_dir, exist_ok=True)
+        self.df_uk.to_csv(f"{output_dir}/cleaned_uk_data.csv", index=False)
+        print(f"Saved the cleaned data: {output_dir}/cleaned_uk_data.csv")
+        
 class FeatureEngineer:
     def __init__(self, data_path):
 
