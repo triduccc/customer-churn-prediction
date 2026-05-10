@@ -206,8 +206,8 @@ class FeatureEngineer:
             if (i + 1) % 500 == 0:
                 print(f"Handled {i + 1}/{num_customers} customers...")
 
-            print("Finished calculating features")
-            return self.customer_features
+        print("Finished calculating features")
+        return self.customer_features
 
     def transform_features(self):
         # Apply Box-Cox transformation to normalize feature distribution
