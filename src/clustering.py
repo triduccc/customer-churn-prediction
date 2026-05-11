@@ -472,7 +472,7 @@ class Clustering:
         best_score = max(self.optimal_clusters["silhouette_scores"])
         axes[1].scatter(best_k, best_score, s=200, c="red", alpha=0.5, zorder=5)
         axes[1].annotate(
-            f"Tốt nhất k={best_k}",
+            f"Best k={best_k}",
             xy=(best_k, best_score),
             xytext=(10, -15),
             textcoords="offset points",
@@ -685,9 +685,7 @@ class Clustering:
         data_normalized = data_normalized.fillna(0)
 
         # Replace labels with English
-        data_normalized.columns = [
-            important_features[col] for col in data_normalized.columns
-        ]
+        #data_normalized.columns = [important_features[col] for col in data_normalized.columns]
 
         # Setup angles
         categories = list(data_normalized.columns)
