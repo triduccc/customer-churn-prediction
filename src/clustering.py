@@ -586,7 +586,7 @@ class Clustering:
         data_normalized = (data_selected - global_min) / (global_max - global_min)
         data_normalized = data_normalized.fillna(0)
 
-        # uncomment if you want vietnamese columns
+        # uncomment if the preferred language for columns is vietnamese
         # data_normalized.columns = [important_features[col] for col in data_normalized.columns]
 
         # Setup radar chart
@@ -663,7 +663,7 @@ class Clustering:
         """
         cluster_means = self.cluster_results[k]["means"]
 
-        # Chọn features quan trọng
+        # Choose the important features
         important_features = {
             "Sum_Quantity": "Khối lượng mua",
             "Sum_TotalPrice": "Tổng chi tiêu",
@@ -912,3 +912,4 @@ class DataVisualizer:
 
         plt.tight_layout()
         plt.show()
+
